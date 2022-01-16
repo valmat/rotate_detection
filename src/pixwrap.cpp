@@ -14,7 +14,7 @@ PixWrap::~PixWrap()
     pixDestroy(&pix);
 }
 
-bool PixWrap::writePng(const char *fname, float gamma = 0) noexcept
+bool PixWrap::writePng(const char *fname, float gamma) noexcept
 {
     return pixWritePng(fname, pix, gamma);
 }
