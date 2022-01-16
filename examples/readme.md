@@ -10,7 +10,7 @@ Why leptonica? Because tesseract uses it.
 ## API
 
 ```c++
-int get_pix_rotation(const Pix *pix, const GetPixRotOts& opts = {}) noexcept;
+int get_pix_rotation(const Pix *pix, const PixRotOpts& opts = {}) noexcept;
 ```
 Returns the angle in degrees
 
@@ -21,9 +21,9 @@ std::pair<int, int> get_pix_rotation_wh(const Pix *pix, int angle) noexcept;
 Returns pair `[width, height]` to set in call of leptonica function `pixRotate`
 
 
-You can specify how to search the angle with `PixRotOts`
+You can specify how to search the angle with `PixRotOpts`
 ```c++
-struct PixRotOts
+struct PixRotOpts
 {
     float contrast_factor = 1.0;
     int   threshold       = 170;   // Threshold for creating black-white representation

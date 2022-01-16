@@ -92,7 +92,7 @@ namespace {
         return pixConvertTo1(ctr_pix, threshold);
     }
 
-    std::pair<int, double> find_best(const uint32_t *pixData, size_t width, size_t height, int32_t wpl, const PixRotOts& opts) noexcept
+    std::pair<int, double> find_best(const uint32_t *pixData, size_t width, size_t height, int32_t wpl, const PixRotOpts& opts) noexcept
     {
         int    best_angle = 0;
         double min_ent    = std::numeric_limits<double>::max();
@@ -109,7 +109,7 @@ namespace {
     }
 }
 
-int get_pix_rotation(const PIX *orig_pix, const PixRotOts& opts) noexcept
+int get_pix_rotation(const PIX *orig_pix, const PixRotOpts& opts) noexcept
 {
     PixWrap pix = bw_bix(orig_pix, opts.contrast_factor, opts.threshold);
 
@@ -131,7 +131,7 @@ int get_pix_rotation(const PIX *orig_pix, const PixRotOts& opts) noexcept
     tasks.reserve(threads);
 
     for (auto&& [cur_from, cur_to]: splitRange(opts.angle_first, opts.angle_last, threads)) {
-        PixRotOts o = opts;
+        PixRotOpts o = opts;
         o.angle_first     = cur_from;
         o.angle_last      = cur_to;
 

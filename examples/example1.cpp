@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
 
     PixWrap pix_orig {argv[1]};
     
-    PixRotOts opts;
+    PixRotOpts opts;
     // opts.use_vertical = false;
     // opts.threads = 1;
     

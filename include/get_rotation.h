@@ -4,7 +4,7 @@
 #include "pixwrap.h"
 
 
-struct PixRotOts
+struct PixRotOpts
 {
     float contrast_factor = 1.0;
     int   threshold       = 170;   // Threshold for creating black-white representation
@@ -16,7 +16,7 @@ struct PixRotOts
 };
 
 // Returns the angle to rotate image to make aligned
-int get_pix_rotation(const Pix *pix, const PixRotOts& opts = {}) noexcept;
+int get_pix_rotation(const Pix *pix, const PixRotOpts& opts = {}) noexcept;
 
 // returns [width, height]
 std::pair<int, int> get_pix_rotation_wh(const Pix *pix, int angle) noexcept;
