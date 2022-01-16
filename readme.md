@@ -11,6 +11,12 @@ Designed for embedding in systems using tesseract OCR
 
 ---
 
+![1](demo/small/1-in.jpg) ![1](demo/small/1-in.jpg)
+
+![2](demo/small/2-in.jpg) ![2](demo/small/2-in.jpg)
+
+---
+
 The detection algorithm based on [Rényi entropy](https://en.wikipedia.org/wiki/R%C3%A9nyi_entropy)
 
 
