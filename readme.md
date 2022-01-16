@@ -1,5 +1,4 @@
-# Detecting the rotation angle of scanned documents
-
+# Detecting rotation angle on scanned documents
 
 Detects the rotation of scanned documents.
 
