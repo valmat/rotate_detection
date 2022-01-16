@@ -12,7 +12,7 @@ struct GetPixRotOts
     int   angle_last      = 45;   // Completes search the angle on angle_last
     int   angle_step      = 1;    // Step withs searching angle
     bool  use_vertical    = true; // false -- fast, true -- slow, but more accurate
-    uint  threads         = 1;    // 0 -- Use all 
+    uint  threads         = 0;    // 0 -- Use all 
 };
 
 // Returns the angle to rotate image to make aligned
