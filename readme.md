@@ -11,9 +11,16 @@ Designed for embedding in systems using tesseract OCR
 
 ---
 
-![1](demo/small/1-in.jpg) ![1](demo/small/1-in.jpg)
+![](demo/small/1-in.jpg) `-->` ![](demo/small/1-out.jpg)
 
-![2](demo/small/2-in.jpg) ![2](demo/small/2-in.jpg)
+![](demo/small/2-in.jpg) `-->` ![](demo/small/2-out.jpg)
+
+
+Original                  |  Rotated
+:------------------------:|:-------------------------:
+![](demo/small/3-in.jpg)  | ![](demo/small/3-out.jpg)
+![](demo/small/4-in.jpg)  | ![](demo/small/4-out.jpg)
+![](demo/small/5-in.jpg)  | ![](demo/small/5-out.jpg)
 
 ---
 
