@@ -107,7 +107,7 @@ namespace {
         double min_ent    = std::numeric_limits<double>::max();
 
         for (int angle = opts.angle_first; angle <= opts.angle_last; angle += opts.angle_step) {
-            double ent = getEntropy(pixData, width, height, wpl, angle, opts.use_vertical);
+            double ent = getEntropy(pixData, width, height, wpl, angle, !opts.fast);
             if(min_ent > ent) {
                 min_ent    = ent;
                 best_angle = angle;

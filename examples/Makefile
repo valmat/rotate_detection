@@ -10,7 +10,7 @@ CPP_STD  = c++17
 # compiler flags
 OPT_FLAG   = -pedantic -Wall -Wextra -Wsequence-point -Wno-unused-parameter -Weffc++
 
-INCLUDES   = -I. -I"src/" -I"../include/" $(shell pkg-config --cflags lept)
+INCLUDES   = -I. -I"cpp/" -I"../include/" $(shell pkg-config --cflags lept)
 
 CPP_FLAGS  = -std=${CPP_STD} ${OPT_FLAG} ${INCLUDES} -pthread 
 LD_FLAGS   = -std=${CPP_STD} ${OPT_FLAG}
@@ -22,7 +22,7 @@ STRIPBIN = true
 version_color= \033[1;33m
 
 
-SOURCES_subm = $(shell find -L src/          -type f -name '*.cpp')
+SOURCES_subm = $(shell find -L cpp/          -type f -name '*.cpp')
 EXECS_SRC    = $(shell find -L . -maxdepth 1 -type f -name '*.cpp')
 
 
