@@ -1,9 +1,28 @@
-#pragma once
+Don't forget install libleptonica
 
-#include <utility>
-#include "pixwrap.h"
+```bash
+sudo apt update
+sudo apt install libleptonica-dev
+```
+
+Why leptonica? Because tesseract uses it.
+
+## API
+
+```c++
+int get_pix_rotation(const Pix *pix, const GetPixRotOts& opts = {}) noexcept;
+```
+Returns the angle in degrees
 
 
+```c++
+std::pair<int, int> get_pix_rotation_wh(const Pix *pix, int angle) noexcept;
+```
+Returns pair `[width, height]` to set in call of leptonica function `pixRotate`
+
+
+You can specify how to search the angle with `PixRotOts`
+```c++
 struct PixRotOts
 {
     float contrast_factor = 1.0;
@@ -14,9 +33,4 @@ struct PixRotOts
     bool  fast            = false; // true -- fast, false -- slow, but more accurate (scans vertical lines)
     uint  threads         = 0;     // 0 -- Use all (Multithreading)
 };
-
-// Returns the angle to rotate image to make aligned
-int get_pix_rotation(const Pix *pix, const PixRotOts& opts = {}) noexcept;
-
-// returns [width, height]
-std::pair<int, int> get_pix_rotation_wh(const Pix *pix, int angle) noexcept;
+```

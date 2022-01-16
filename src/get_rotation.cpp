@@ -3,12 +3,9 @@
 
 #include <cmath>
 #include <limits>
-
 #include <thread>
 #include <future>
-
-#include <iostream>
-#include <allheaders.h>
+#include <allheaders.h> // leptonica
 
 
 namespace {
@@ -19,7 +16,8 @@ namespace {
         return GET_DATA_BIT(data + y * wpl, x) ? 1 : 0;
     }
 
-    float Q_rsqrt( float number ) noexcept
+    // Quiq sqrt
+    float q_rsqrt( float number ) noexcept
     {   
         const float x2 = number * 0.5F;
         const float threehalfs = 1.5F;
@@ -27,7 +25,7 @@ namespace {
         union {
             float f;
             uint32_t i;
-        } conv = {number}; // member 'f' set to value of 'number'.
+        } conv = {number};
         conv.i = 0x5f3759df - ( conv.i >> 1 );
         conv.f *= threehalfs - x2 * conv.f * conv.f;
         return conv.f;
@@ -36,15 +34,10 @@ namespace {
     double getEntropy(double p) noexcept
     {
         double q = 1.0 - p;
-        // The Rényi entropy
-        // return (p > 0.0 && p < 1.0) ? -log(p*p + q*q) : 0.0;
-        // return (p > 0.0 && p < 1.0) ? -log(pow(p, 100) + pow(q, 100)) / 99 : 0.0;
-        return (p > 0.0 && p < 1.0) ? 2 * log(sqrt(p) + sqrt(q)) : 0.0;
-        return (p > 0.0 && p < 1.0) ? 2 * log(Q_rsqrt(p) + Q_rsqrt(q)) : 0.0;
-
-        // return (p > 0.0 && p < 1.0) ? log(pow(p, 0.1) + pow(q, 0.1)) / 0.9 : 0.0;
-        // Шеннон
-        // return (p > 0.0 && p < 1.0) ? -(p * log(p) + q * log(q)) : 0.0;
+        
+        // The Rényi entropy (deg = 1/2)
+        return (p > 0.0 && p < 1.0) ? 2 * log(q_rsqrt(p) + q_rsqrt(q)) : 0.0;
+        // return (p > 0.0 && p < 1.0) ? 2 * log(sqrt(p) + sqrt(q)) : 0.0;
     }
 
     double getEntropy(const uint32_t *pixData, size_t width, size_t height, int32_t wpl, int angle, bool use_vertical) noexcept
@@ -63,7 +56,6 @@ namespace {
                 
                 blacks += getPixVal(x_, y_, pixData, wpl);
             }
-
             entSum += getEntropy(1.0 * blacks / width) / height;
         }
 
@@ -83,25 +75,24 @@ namespace {
             entSum /= 2.0;
         }
 
-        // std::cerr << angle << ", " << entSum << std::endl;
         return entSum;
     }
 
-    PixWrap bw_bix(const PIX *pix, float contrast_factor, int threshold) noexcept
+    PixWrap bw_bix(const Pix* pix, float contrast_factor, int threshold) noexcept
     {
         const PIX *orig_pix = pix;
         PixWrap gray_pix;
 
         if(pixGetDepth(pix) > 8) {
-            gray_pix = pixConvertRGBToLuminance(const_cast<PIX*>(pix));
+            gray_pix = pixConvertRGBToLuminance(const_cast<Pix*>(pix));
             orig_pix = gray_pix;
         }
-        PixWrap ctr_pix {pixContrastTRC(nullptr, const_cast<PIX*>(orig_pix), contrast_factor)};
+        PixWrap ctr_pix {pixContrastTRC(nullptr, const_cast<Pix*>(orig_pix), contrast_factor)};
 
         return pixConvertTo1(ctr_pix, threshold);
     }
 
-    std::pair<int, double> find_best(const uint32_t *pixData, size_t width, size_t height, int32_t wpl, const GetPixRotOts& opts) noexcept
+    std::pair<int, double> find_best(const uint32_t *pixData, size_t width, size_t height, int32_t wpl, const PixRotOts& opts) noexcept
     {
         int    best_angle = 0;
         double min_ent    = std::numeric_limits<double>::max();
@@ -118,36 +109,32 @@ namespace {
     }
 }
 
-int get_pix_rotation(const PIX *orig_pix, const GetPixRotOts& opts) noexcept
+int get_pix_rotation(const PIX *orig_pix, const PixRotOts& opts) noexcept
 {
     PixWrap pix = bw_bix(orig_pix, opts.contrast_factor, opts.threshold);
-    pix.writePng("out-1.png");
-
 
     size_t width  = pixGetWidth  (pix);
     size_t height = pixGetHeight (pix);
-    int32_t   wpl  = pixGetWpl   (pix);
+    int32_t   wpl = pixGetWpl    (pix);
     const uint32_t *pixData = pixGetData(pix);
 
-
     uint threads = (0 == opts.threads) ? std::thread::hardware_concurrency() : opts.threads;
-    // std::cerr << "threads : " << threads << std::endl;
     if(1 == threads) {
         auto [best_angle, min_ent] = find_best(pixData, width, height, wpl, opts);
         return best_angle;
     }
 
-
+    //
     // Multithreading
+    //
     std::vector<std::future<std::pair<int, double>>> tasks;
     tasks.reserve(threads);
 
     for (auto&& [cur_from, cur_to]: splitRange(opts.angle_first, opts.angle_last, threads)) {
-        GetPixRotOts o = opts;
+        PixRotOts o = opts;
         o.angle_first     = cur_from;
         o.angle_last      = cur_to;
 
-        // std::cerr << "(" << cur_from << ", " << cur_to << ")*[" << (cur_to - cur_from + 1) << "]" << std::endl;
         tasks.emplace_back( std::async(std::launch::async, find_best, pixData, width, height, wpl, o) );
     }
 
