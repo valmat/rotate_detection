@@ -1,11 +1,8 @@
 #include <iostream>
 #include <cmath>
-#include <sstream>
 #include <allheaders.h>
 #include "pixwrap.h"
 #include "get_rotation.h"
-
-
 
 int main(int argc, char* argv[])
 {
@@ -14,27 +11,22 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    PixWrap pix_orig {argv[1]};
+    PixWrap pix {argv[1]};
     
-    PixRotOpts opts;
-    // opts.use_vertical = false;
-    // opts.threads = 1;
-    
-    int angle = get_pix_rotation(pix_orig, opts);
+    int angle = get_pix_rotation(pix);
     std::cerr << "angle: " << angle << std::endl; 
     
     double angle_rad = angle * M_PI / 180;    
     
-    std::cerr << "width : " << pixGetWidth (pix_orig) << std::endl; 
-    std::cerr << "height: " << pixGetHeight(pix_orig) << std::endl; 
+    std::cerr << "width : " << pixGetWidth (pix) << std::endl; 
+    std::cerr << "height: " << pixGetHeight(pix) << std::endl; 
 
-    auto [width, height] = get_pix_rotation_wh(pix_orig, angle);
+    auto [width, height] = get_pix_rotation_wh(pix, angle);
     std::cerr << "width : " << width << std::endl; 
     std::cerr << "height: " << height << std::endl; 
 
-    // pixRotate ( PIX *pixs, l_float32 angle, l_int32 type, l_int32 incolor, l_int32 width, l_int32 height );
-    PixWrap(pixRotate(pix_orig, angle_rad, L_ROTATE_AREA_MAP, L_BRING_IN_WHITE, width, height )).writePng(argv[2]);
-    // PixWrap(pixRotate(pix_orig, angle_rad, L_ROTATE_AREA_MAP, L_BRING_IN_WHITE, 0, 0 )).writePng("out-rot.png");
+    PixWrap(pixRotate(pix, angle_rad, L_ROTATE_AREA_MAP, L_BRING_IN_WHITE, width, height )).writePng(argv[2]);
+    // PixWrap(pixRotate(pix, angle_rad, L_ROTATE_AREA_MAP, L_BRING_IN_WHITE, 0, 0 )).writePng("out-rot.png");
 
     return 0;
 }
