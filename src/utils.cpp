@@ -3,6 +3,7 @@
 std::vector<std::pair<int, int>>
 splitRange(int from, int to, size_t threads) noexcept
 {
+    // TODO Redo this into a range
     std::vector<std::pair<int, int>> pairs;
     pairs.reserve(threads);
 

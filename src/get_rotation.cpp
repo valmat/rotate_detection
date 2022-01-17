@@ -78,9 +78,9 @@ namespace {
         return entSum;
     }
 
-    PixWrap bw_bix(const Pix* pix, float contrast_factor, int threshold) noexcept
+    PixWrap bw_pix(const Pix* pix, float contrast_factor, int threshold) noexcept
     {
-        const PIX *orig_pix = pix;
+        const Pix *orig_pix = pix;
         PixWrap gray_pix;
 
         if(pixGetDepth(pix) > 8) {
@@ -111,7 +111,7 @@ namespace {
 
 int get_pix_rotation(const PIX *orig_pix, const PixRotOpts& opts) noexcept
 {
-    PixWrap pix = bw_bix(orig_pix, opts.contrast_factor, opts.threshold);
+    PixWrap pix = bw_pix(orig_pix, opts.contrast_factor, opts.threshold);
 
     size_t width  = pixGetWidth  (pix);
     size_t height = pixGetHeight (pix);
@@ -152,7 +152,7 @@ int get_pix_rotation(const PIX *orig_pix, const PixRotOpts& opts) noexcept
 }
 
 // returns [width, height]
-std::pair<int, int> get_pix_rotation_wh(const PIX *pix, int angle) noexcept
+std::pair<int, int> get_pix_rotation_wh(const Pix *pix, int angle) noexcept
 {
     int width  = pixGetWidth (pix);
     int height = pixGetHeight(pix);
