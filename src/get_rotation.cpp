@@ -18,28 +18,11 @@ namespace {
         return GET_DATA_BIT(data + y * wpl, x) ? 1 : 0;
     }
 
-    // Quiq sqrt
-    float q_rsqrt( float number ) noexcept
-    {   
-        const float x2 = number * 0.5F;
-        const float threehalfs = 1.5F;
-
-        union {
-            float f;
-            uint32_t i;
-        } conv = {number};
-        conv.i = 0x5f3759df - ( conv.i >> 1 );
-        conv.f *= threehalfs - x2 * conv.f * conv.f;
-        return conv.f;
-    }
-
     double getEntropy(double p) noexcept
     {
         double q = 1.0 - p;
-        
         // The Rényi entropy (deg = 1/2)
-        return (p > 0.0 && p < 1.0) ? 2 * log(q_rsqrt(p) + q_rsqrt(q)) : 0.0;
-        // return (p > 0.0 && p < 1.0) ? 2 * log(sqrt(p) + sqrt(q)) : 0.0;
+        return (p > 0.0 && p < 1.0) ? 2 * log(sqrt(p) + sqrt(q)) : 0.0;
     }
 
     double getEntropy(const uint32_t *pixData, size_t width, size_t height, int32_t wpl, int angle, bool use_vertical) noexcept
