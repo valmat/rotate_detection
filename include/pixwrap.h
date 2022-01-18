@@ -10,9 +10,9 @@
 
 struct Pix;
 
-namespace derot{ //detect rotation
+namespace derot { //detect rotation
 
-    struct PixWrap
+    struct PixWrap final
     {
         Pix* pix = nullptr;
 

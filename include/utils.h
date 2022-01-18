@@ -3,7 +3,7 @@
 #include <utility>
 #include <vector>
 
-namespace derot{ //detect rotation
+namespace derot { //detect rotation
     
     // Evenly splits the values range for load balancing CPU cores 
     [[nodiscard]] 

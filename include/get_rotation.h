@@ -4,9 +4,9 @@
 #include "pixwrap.h"
 
 
-namespace derot{ //detect rotation
+namespace derot { //detect rotation
 
-    struct PixRotOpts
+    struct PixRotOpts final
     {
         float contrast_factor = 1.0;
         int   threshold       = 170;   // Threshold for creating black-white representation
