@@ -45,7 +45,7 @@ endif
 CPUS=$(shell nproc)
 MAKEFLAGS += --jobs=${CPUS}
 
-.PHONY: clean release pv cppcheck all
+.PHONY: clean release all
 
 EXECS_OBJ := $(patsubst ./%.cpp,o/%.o,$(EXECS_SRC))
 EXECS_BIN := $(patsubst o/%.o,bin/%.bin,$(EXECS_OBJ))
