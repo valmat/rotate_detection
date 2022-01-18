@@ -9,6 +9,8 @@
 
 
 namespace {
+    using derot::PixWrap;
+    using derot::PixRotOpts;
 
     // Get pix value (0/1)
     int getPixVal(size_t x, size_t y, const uint32_t *data, int32_t wpl) noexcept
@@ -110,57 +112,61 @@ namespace {
     }
 }
 
-int get_pix_rotation(const PIX *orig_pix, const PixRotOpts& opts) noexcept
-{
-    PixWrap pix = bw_pix(orig_pix, opts.contrast_factor, opts.threshold);
+namespace derot{ //detect rotation
 
-    size_t width  = pixGetWidth  (pix);
-    size_t height = pixGetHeight (pix);
-    int32_t   wpl = pixGetWpl    (pix);
-    const uint32_t *pixData = pixGetData(pix);
+    int get_pix_rotation(const PIX *orig_pix, const PixRotOpts& opts) noexcept
+    {
+        PixWrap pix = bw_pix(orig_pix, opts.contrast_factor, opts.threshold);
 
-    uint threads = (0 == opts.threads) ? std::thread::hardware_concurrency() : opts.threads;
-    if(1 == threads) {
-        auto [best_angle, min_ent] = find_best(pixData, width, height, wpl, opts);
+        size_t width  = pixGetWidth  (pix);
+        size_t height = pixGetHeight (pix);
+        int32_t   wpl = pixGetWpl    (pix);
+        const uint32_t *pixData = pixGetData(pix);
+
+        uint threads = (0 == opts.threads) ? std::thread::hardware_concurrency() : opts.threads;
+        if(1 == threads) {
+            auto [best_angle, min_ent] = find_best(pixData, width, height, wpl, opts);
+            return best_angle;
+        }
+
+        //
+        // Multithreading
+        //
+        std::vector<std::future<std::pair<int, double>>> tasks;
+        tasks.reserve(threads);
+
+        for (auto&& [cur_from, cur_to]: splitRange(opts.angle_first, opts.angle_last, threads)) {
+            PixRotOpts o = opts;
+            o.angle_first     = cur_from;
+            o.angle_last      = cur_to;
+
+            tasks.emplace_back( std::async(std::launch::async, find_best, pixData, width, height, wpl, o) );
+        }
+
+        int    best_angle = 0;
+        double min_ent    = std::numeric_limits<double>::max();
+        for(auto& task: tasks) {
+            auto [angle, ent] = task.get();
+            if(min_ent > ent) {
+                min_ent    = ent;
+                best_angle = angle;
+            }
+        }
+        
         return best_angle;
     }
 
-    //
-    // Multithreading
-    //
-    std::vector<std::future<std::pair<int, double>>> tasks;
-    tasks.reserve(threads);
+    // returns [width, height]
+    std::pair<int, int> get_pix_rotation_wh(const Pix *pix, int angle) noexcept
+    {
+        int width  = pixGetWidth (pix);
+        int height = pixGetHeight(pix);
+        double angle_rad = angle * M_PI / 180; 
 
-    for (auto&& [cur_from, cur_to]: splitRange(opts.angle_first, opts.angle_last, threads)) {
-        PixRotOpts o = opts;
-        o.angle_first     = cur_from;
-        o.angle_last      = cur_to;
-
-        tasks.emplace_back( std::async(std::launch::async, find_best, pixData, width, height, wpl, o) );
+        return std::make_pair(
+            width * sin(angle_rad) + height * cos(angle_rad) ,
+            width * cos(angle_rad) + height * sin(angle_rad)
+        );
     }
 
-    int    best_angle = 0;
-    double min_ent    = std::numeric_limits<double>::max();
-    for(auto& task: tasks) {
-        auto [angle, ent] = task.get();
-        if(min_ent > ent) {
-            min_ent    = ent;
-            best_angle = angle;
-        }
-    }
-    
-    return best_angle;
-}
-
-// returns [width, height]
-std::pair<int, int> get_pix_rotation_wh(const Pix *pix, int angle) noexcept
-{
-    int width  = pixGetWidth (pix);
-    int height = pixGetHeight(pix);
-    double angle_rad = angle * M_PI / 180; 
-
-    return std::make_pair(
-        width * sin(angle_rad) + height * cos(angle_rad) ,
-        width * cos(angle_rad) + height * sin(angle_rad)
-    );
 }

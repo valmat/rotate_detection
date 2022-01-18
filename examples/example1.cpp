@@ -4,6 +4,8 @@
 #include "pixwrap.h"
 #include "get_rotation.h"
 
+using derot::PixWrap;
+
 int main(int argc, char* argv[])
 {
     if (argc < 3) {
@@ -13,7 +15,7 @@ int main(int argc, char* argv[])
 
     PixWrap pix {argv[1]};
     
-    int angle = get_pix_rotation(pix);
+    int angle = derot::get_pix_rotation(pix);
     std::cerr << "angle: " << angle << std::endl; 
     
     double angle_rad = angle * M_PI / 180;    
@@ -21,7 +23,7 @@ int main(int argc, char* argv[])
     std::cerr << "width : " << pixGetWidth (pix) << std::endl; 
     std::cerr << "height: " << pixGetHeight(pix) << std::endl; 
 
-    auto [width, height] = get_pix_rotation_wh(pix, angle);
+    auto [width, height] = derot::get_pix_rotation_wh(pix, angle);
     std::cerr << "width : " << width << std::endl; 
     std::cerr << "height: " << height << std::endl; 
 

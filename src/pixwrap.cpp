@@ -5,16 +5,20 @@
 #include "pixwrap.h"
 #include <allheaders.h>
 
-PixWrap::PixWrap(const char *fname) noexcept :
-    pix(pixRead(fname))
-{}
+namespace derot{ //detect rotation
+    
+    PixWrap::PixWrap(const char *fname) noexcept :
+        pix(pixRead(fname))
+    {}
 
-PixWrap::~PixWrap()
-{
-    pixDestroy(&pix);
-}
+    PixWrap::~PixWrap()
+    {
+        pixDestroy(&pix);
+    }
 
-bool PixWrap::writePng(const char *fname, float gamma) noexcept
-{
-    return pixWritePng(fname, pix, gamma);
+    bool PixWrap::writePng(const char *fname, float gamma) noexcept
+    {
+        return pixWritePng(fname, pix, gamma);
+    }
+    
 }

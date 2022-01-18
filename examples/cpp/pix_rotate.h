@@ -5,4 +5,4 @@
 #include "pixwrap.h"
 
 
-PixWrap pix_rotate(const Pix* pix, int degrees, bool extend_size = true) noexcept;
+derot::PixWrap pix_rotate(const Pix* pix, int degrees, bool extend_size = true) noexcept;

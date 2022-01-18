@@ -1,32 +1,36 @@
 #include "utils.h"
 
-std::vector<std::pair<int, int>>
-splitRange(int from, int to, size_t threads) noexcept
-{
-    // TODO Redo this into a range
-    std::vector<std::pair<int, int>> pairs;
-    pairs.reserve(threads);
+namespace derot{ //detect rotation
 
-    int range_len = to - from + 1;
-    int sub_len   = range_len / threads;
-    size_t rest_len  = range_len % threads;
+    std::vector<std::pair<int, int>>
+    splitRange(int from, int to, size_t threads) noexcept
+    {
+        // TODO Redo this into a range
+        std::vector<std::pair<int, int>> pairs;
+        pairs.reserve(threads);
 
-    int cur_from = from;
-    int cur_to;
+        int range_len = to - from + 1;
+        int sub_len   = range_len / threads;
+        size_t rest_len  = range_len % threads;
 
-    for (size_t i = 0; i < rest_len && cur_from <= to; ++i) {
-        cur_to   = cur_from + sub_len;
-        pairs.emplace_back(cur_from, cur_to);
-        cur_from = cur_to + 1;
+        int cur_from = from;
+        int cur_to;
+
+        for (size_t i = 0; i < rest_len && cur_from <= to; ++i) {
+            cur_to   = cur_from + sub_len;
+            pairs.emplace_back(cur_from, cur_to);
+            cur_from = cur_to + 1;
+        }
+        
+        for (size_t i = rest_len; i < threads && cur_from <= to; ++i) {
+            cur_to   = cur_from + sub_len - 1 ;
+            pairs.emplace_back(cur_from, cur_to);
+            cur_from = cur_to + 1;
+        }    
+
+        return pairs;
     }
-    
-    for (size_t i = rest_len; i < threads && cur_from <= to; ++i) {
-        cur_to   = cur_from + sub_len - 1 ;
-        pairs.emplace_back(cur_from, cur_to);
-        cur_from = cur_to + 1;
-    }    
 
-    return pairs;
 }
 
 // 

@@ -4,6 +4,8 @@
 
 #include "pix_rotate.h"
 
+using derot::PixWrap;
+using derot::PixRotOpts;
 
 int main(int argc, char* argv[])
 {
@@ -18,7 +20,7 @@ int main(int argc, char* argv[])
     // opts.fast = true;
     // opts.threads = 1;
     
-    int angle = get_pix_rotation(pix, opts);
+    int angle = derot::get_pix_rotation(pix, opts);
     std::cerr << "angle: " << angle << std::endl; 
     
     bool extend_size = false;

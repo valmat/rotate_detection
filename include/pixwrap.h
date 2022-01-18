@@ -10,39 +10,42 @@
 
 struct Pix;
 
-struct PixWrap
-{
-    Pix* pix = nullptr;
+namespace derot{ //detect rotation
 
-    PixWrap() = default;
-
-    PixWrap(const char *fname) noexcept;
-
-    ~PixWrap();
-
-    bool writePng(const char *fname, float gamma = 0) noexcept;
-
-    operator Pix*() noexcept
+    struct PixWrap
     {
-        return pix;
-    }
+        Pix* pix = nullptr;
 
-    PixWrap(Pix* ptr) noexcept :
-        pix(ptr)
-    {}
+        PixWrap() = default;
 
-    PixWrap(PixWrap && rhs) noexcept :
-        pix(std::exchange(rhs.pix, nullptr))
-    {}
+        PixWrap(const char *fname) noexcept;
 
-    PixWrap &operator=(PixWrap && rhs) noexcept
-    {
-        std::swap(pix, rhs.pix);
-        return *this;
-    }
+        ~PixWrap();
 
-    // No copyable
-    PixWrap(const PixWrap &)            = delete;
-    PixWrap &operator=(const PixWrap &) = delete;
+        bool writePng(const char *fname, float gamma = 0) noexcept;
 
-};
+        operator Pix*() noexcept
+        {
+            return pix;
+        }
+
+        PixWrap(Pix* ptr) noexcept :
+            pix(ptr)
+        {}
+
+        PixWrap(PixWrap && rhs) noexcept :
+            pix(std::exchange(rhs.pix, nullptr))
+        {}
+
+        PixWrap &operator=(PixWrap && rhs) noexcept
+        {
+            std::swap(pix, rhs.pix);
+            return *this;
+        }
+
+        // No copyable
+        PixWrap(const PixWrap &)            = delete;
+        PixWrap &operator=(const PixWrap &) = delete;
+
+    };
+}
