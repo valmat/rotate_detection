@@ -74,6 +74,7 @@ namespace {
             }
             entSum /= 2.0;
         }
+        // TODO: Use sample entropy instead of average to improve quality
 
         return entSum;
     }
