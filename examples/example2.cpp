@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
     // opts.threads = 1;
     
     int angle = derot::get_pix_rotation(pix, opts);
-    std::cerr << "angle: " << angle << std::endl; 
+    std::cerr << "angle: " << angle << std::endl;
     
     bool extend_size = false;
     pix_rotate(pix, angle, extend_size).writePng(argv[2]);
