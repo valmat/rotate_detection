@@ -19,11 +19,22 @@ int main(int argc, char* argv[])
     PixRotOpts opts;
     // opts.fast = true;
     // opts.threads = 1;
+    // opts.contrast_factor = 1.0;
+    // opts.threshold       = 170;   // Threshold for creating black-white representation
+    // opts.angle_first     = -45;   // Starts searching angle from angle_first
+    // opts.angle_last      = 45;    // Completes search the angle on angle_last
     
+    // opts.angle_first     = -20;   // Starts searching angle from angle_first
+    // opts.angle_last      = 20;    // Completes search the angle on angle_last
+
+    // opts.angle_step      = 1;     // Step withs searching angle
+    // opts.fast            = false; // true -- fast, false -- slow, but more accurate (scans vertical lines)
+    // opts.threads         = 0;     // 0 -- Use all (Multithreading)
+
     int angle = derot::get_pix_rotation(pix, opts);
     std::cerr << "angle: " << angle << std::endl;
     
-    bool extend_size = false;
+    bool extend_size = true;
     pix_rotate(pix, angle, extend_size).writePng(argv[2]);
 
     return 0;

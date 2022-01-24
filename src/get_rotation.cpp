@@ -12,7 +12,7 @@ namespace {
     using derot::PixWrap;
     using derot::PixRotOpts;
 
-    // Get pix value (0/1)
+    // Get pix value (0 -- white / 1 -- black)
     int getPixVal(size_t x, size_t y, const uint32_t *data, int32_t wpl) noexcept
     {
         return GET_DATA_BIT(data + y * wpl, x) ? 1 : 0;
@@ -25,66 +25,70 @@ namespace {
         return (p > 0.0 && p < 1.0) ? 2 * log(sqrt(p) + sqrt(q)) : 0.0;
     }
 
-    double getEntropy(const uint32_t *pixData, size_t width, size_t height, int32_t wpl, int angle, bool use_vertical) noexcept
+    double getEntropy(const uint32_t *pixData, size_t width, size_t height, size_t diagonal, int32_t wpl, int angle, bool use_vertical) noexcept
     {
         double angle_rad = angle * M_PI / 180;
-        double entSum = 0;
+        double cos_ = cos(angle_rad);
+        double sin_ = sin(angle_rad);
 
-        for (size_t y = 0; y < height; ++y)
+        int x_from = diagonal / 2.0 - (height * abs(sin_) + width * abs(cos_)) / 2.0;
+        int x_to   = diagonal - x_from;
+        int y_from = diagonal / 2.0 - (height * abs(cos_) + width * abs(sin_)) / 2.0;
+        int y_to   = diagonal - y_from;
+
+        double entSum = 0;
+        for (int y = y_from; y < y_to; ++y)
         {
             size_t blacks = 0;
-
-            for (size_t x = 0; x < width; ++x)
+            for (int x = x_from; x < x_to; ++x)
             {
-                int x_ = int(width  + x * cos(angle_rad) - y * sin(angle_rad) ) % width;
-                int y_ = int(height + x * sin(angle_rad) + y * cos(angle_rad) ) % height;
                 
-                blacks += getPixVal(x_, y_, pixData, wpl);
+                double xx = x - diagonal / 2.0;
+                double yy = y - diagonal / 2.0;
+
+                int x_ = xx * cos_ - yy * sin_ + width  / 2.0 ;
+                int y_ = xx * sin_ + yy * cos_ + height / 2.0 ;
+
+                if(x_ >= 0 && x_ < int(width) && y_ >= 0 && y_ < int(height)) {
+                    blacks += getPixVal(x_, y_, pixData, wpl);
+                }
             }
-            entSum += getEntropy(1.0 * blacks / width) / height;
+            entSum += getEntropy(1.0 * blacks / diagonal) / diagonal;
         }
 
         if(use_vertical) {
-            for (size_t x = 0; x < width; ++x)
+            for (int x = x_from; x < x_to; ++x)
             {
                 size_t blacks = 0;
-                for (size_t y = 0; y < height; ++y)
+                for (int y = y_from; y < y_to; ++y)
                 {
-                    int x_ = int(width  + x*cos(angle_rad) - y*sin(angle_rad) ) % width;
-                    int y_ = int(height + x*sin(angle_rad) + y*cos(angle_rad) ) % height;
-                    
-                    blacks += getPixVal(x_, y_, pixData, wpl);;
+                    double xx = x - diagonal / 2.0;
+                    double yy = y - diagonal / 2.0;
+
+                    int x_ = xx * cos_ - yy * sin_ + width  / 2.0 ;
+                    int y_ = xx * sin_ + yy * cos_ + height / 2.0 ;
+
+                    if(x_ >= 0 && x_ < int(width) && y_ >= 0 && y_ < int(height)) {
+                        blacks += getPixVal(x_, y_, pixData, wpl);
+                    }
                 }
-                entSum += getEntropy(1.0 * blacks / height) / width;
+                entSum += getEntropy(1.0 * blacks / diagonal) / diagonal;
             }
             entSum /= 2.0;
+            
         }
+        // std::cout << angle << ", " << entSum << std::endl;
         // TODO: Use sample entropy instead of average to improve quality
-
         return entSum;
     }
 
-    PixWrap bw_pix(const Pix* pix, float contrast_factor, int threshold) noexcept
-    {
-        const Pix *orig_pix = pix;
-        PixWrap gray_pix;
-
-        if(pixGetDepth(pix) > 8) {
-            gray_pix = pixConvertRGBToLuminance(const_cast<Pix*>(pix));
-            orig_pix = gray_pix;
-        }
-        PixWrap ctr_pix {pixContrastTRC(nullptr, const_cast<Pix*>(orig_pix), contrast_factor)};
-
-        return pixConvertTo1(ctr_pix, threshold);
-    }
-
-    std::pair<int, double> find_best(const uint32_t *pixData, size_t width, size_t height, int32_t wpl, const PixRotOpts& opts) noexcept
+    std::pair<int, double> find_best(const uint32_t *pixData, size_t width, size_t height, size_t diagonal, int32_t wpl, const PixRotOpts& opts) noexcept
     {
         int    best_angle = 0;
         double min_ent    = std::numeric_limits<double>::max();
 
         for (int angle = opts.angle_first; angle <= opts.angle_last; angle += opts.angle_step) {
-            double ent = getEntropy(pixData, width, height, wpl, angle, !opts.fast);
+            double ent = getEntropy(pixData, width, height, diagonal, wpl, angle, !opts.fast);
             if(min_ent > ent) {
                 min_ent    = ent;
                 best_angle = angle;
@@ -97,18 +101,38 @@ namespace {
 
 namespace derot{ //detect rotation
 
-    int get_pix_rotation(const PIX *orig_pix, const PixRotOpts& opts) noexcept
+    Pix* get_bw_pix(const Pix* orig_pix, float contrast_factor, int threshold) noexcept
     {
-        PixWrap pix = bw_pix(orig_pix, opts.contrast_factor, opts.threshold);
+        if(pixGetDepth(orig_pix) == 1) {
+            return nullptr;
+        }
 
-        size_t width  = pixGetWidth  (pix);
-        size_t height = pixGetHeight (pix);
-        int32_t   wpl = pixGetWpl    (pix);
-        const uint32_t *pixData = pixGetData(pix);
+        const Pix *pix = orig_pix;
+        PixWrap gray_pix;
+        if(pixGetDepth(orig_pix) > 8) {
+            gray_pix = pixConvertRGBToLuminance(const_cast<Pix*>(pix));
+            pix      = gray_pix;
+        }
+
+        PixWrap ctr_pix {pixContrastTRC(nullptr, const_cast<Pix*>(pix), contrast_factor)};
+        return pixConvertTo1(ctr_pix, threshold);
+    }
+
+    int get_pix_rotation(const Pix *orig_pix, const PixRotOpts& opts) noexcept
+    {
+        PixWrap bw_pix = get_bw_pix(orig_pix, opts.contrast_factor, opts.threshold);
+        const Pix *pix = bw_pix ? bw_pix : orig_pix;
+
+        size_t width    = pixGetWidth  (pix);
+        size_t height   = pixGetHeight (pix);
+        int32_t   wpl   = pixGetWpl    (pix);
+        size_t diagonal = get_pix_diagonal(pix);
+        const uint32_t *pixData = pixGetData(const_cast<Pix*>(pix));
+
 
         uint threads = (0 == opts.threads) ? std::thread::hardware_concurrency() : opts.threads;
         if(1 == threads) {
-            auto [best_angle, min_ent] = find_best(pixData, width, height, wpl, opts);
+            auto [best_angle, min_ent] = find_best(pixData, width, height, diagonal, wpl, opts);
             return best_angle;
         }
 
@@ -119,11 +143,11 @@ namespace derot{ //detect rotation
         tasks.reserve(threads);
 
         for (auto&& [cur_from, cur_to]: splitRange(opts.angle_first, opts.angle_last, threads)) {
-            PixRotOpts o = opts;
-            o.angle_first     = cur_from;
-            o.angle_last      = cur_to;
+            PixRotOpts o  = opts;
+            o.angle_first = cur_from;
+            o.angle_last  = cur_to;
 
-            tasks.emplace_back( std::async(std::launch::async, find_best, pixData, width, height, wpl, o) );
+            tasks.emplace_back( std::async(std::launch::async, find_best, pixData, width, height, diagonal, wpl, o) );
         }
 
         int    best_angle = 0;
@@ -139,17 +163,27 @@ namespace derot{ //detect rotation
         return best_angle;
     }
 
+    // returns diagonal size to extend image with rotatiion
+    size_t get_pix_diagonal(const Pix *pix) noexcept
+    {
+        size_t width  = pixGetWidth (pix);
+        size_t height = pixGetHeight(pix);
+
+        return static_cast<size_t>(sqrt(width * width + height * height) + 0.5);
+    }
+
     // returns [width, height]
     std::pair<int, int> get_pix_rotation_wh(const Pix *pix, int angle) noexcept
     {
         int width  = pixGetWidth (pix);
         int height = pixGetHeight(pix);
-        double angle_rad = angle * M_PI / 180; 
+        double angle_rad = angle * M_PI / 180;
+        double cos_ = abs(cos(angle_rad));
+        double sin_ = abs(sin(angle_rad));
 
         return std::make_pair(
-            width * sin(angle_rad) + height * cos(angle_rad) ,
-            width * cos(angle_rad) + height * sin(angle_rad)
+            width * sin_ + height * cos_,
+            width * cos_ + height * sin_
         );
     }
-
 }

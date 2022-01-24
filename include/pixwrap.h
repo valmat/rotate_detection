@@ -28,6 +28,14 @@ namespace derot { //detect rotation
         {
             return pix;
         }
+        Pix* get() noexcept
+        {
+            return pix;
+        }
+        const Pix* get() const noexcept
+        {
+            return pix;
+        }
 
         PixWrap(Pix* ptr) noexcept :
             pix(ptr)

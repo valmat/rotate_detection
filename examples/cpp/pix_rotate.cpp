@@ -1,6 +1,6 @@
 #include "pix_rotate.h"
-#include <cmath>
 #include "get_rotation.h"
+#include <cmath>
 #include <allheaders.h>
 
 derot::PixWrap pix_rotate(const Pix* pix, int degrees, bool extend_size) noexcept
