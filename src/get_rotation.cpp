@@ -25,7 +25,7 @@ namespace {
         return (p > 0.0 && p < 1.0) ? 2 * log(sqrt(p) + sqrt(q)) : 0.0;
     }
 
-    double getEntropy(const uint32_t *pixData, size_t width, size_t height, size_t diagonal, int32_t wpl, int angle, bool use_vertical) noexcept
+    double getEntropy(const uint32_t *pixData, size_t width, size_t height, size_t diagonal, uint margin, int32_t wpl, int angle, bool use_vertical) noexcept
     {
         double angle_rad = angle * M_PI / 180;
         double cos_ = cos(angle_rad);
@@ -49,7 +49,7 @@ namespace {
                 int x_ = xx * cos_ - yy * sin_ + width  / 2.0 ;
                 int y_ = xx * sin_ + yy * cos_ + height / 2.0 ;
 
-                if(x_ >= 0 && x_ < int(width) && y_ >= 0 && y_ < int(height)) {
+                if(x_ >= int(margin) && x_ < int(width - margin) && y_ >= int(margin) && y_ < int(height - margin)) {
                     blacks += getPixVal(x_, y_, pixData, wpl);
                 }
             }
@@ -68,7 +68,7 @@ namespace {
                     int x_ = xx * cos_ - yy * sin_ + width  / 2.0 ;
                     int y_ = xx * sin_ + yy * cos_ + height / 2.0 ;
 
-                    if(x_ >= 0 && x_ < int(width) && y_ >= 0 && y_ < int(height)) {
+                    if(x_ >= int(margin) && x_ < int(width - margin) && y_ >= int(margin) && y_ < int(height - margin)) {
                         blacks += getPixVal(x_, y_, pixData, wpl);
                     }
                 }
@@ -82,13 +82,13 @@ namespace {
         return entSum;
     }
 
-    std::pair<int, double> find_best(const uint32_t *pixData, size_t width, size_t height, size_t diagonal, int32_t wpl, const PixRotOpts& opts) noexcept
+    std::pair<int, double> find_best(const uint32_t *pixData, size_t width, size_t height, size_t diagonal, uint margin, int32_t wpl, const PixRotOpts& opts) noexcept
     {
         int    best_angle = 0;
         double min_ent    = std::numeric_limits<double>::max();
 
         for (int angle = opts.angle_first; angle <= opts.angle_last; angle += opts.angle_step) {
-            double ent = getEntropy(pixData, width, height, diagonal, wpl, angle, !opts.fast);
+            double ent = getEntropy(pixData, width, height, diagonal, margin, wpl, angle, !opts.fast);
             if(min_ent > ent) {
                 min_ent    = ent;
                 best_angle = angle;
@@ -132,7 +132,7 @@ namespace derot{ //detect rotation
 
         uint threads = (0 == opts.threads) ? std::thread::hardware_concurrency() : opts.threads;
         if(1 == threads) {
-            auto [best_angle, min_ent] = find_best(pixData, width, height, diagonal, wpl, opts);
+            auto [best_angle, min_ent] = find_best(pixData, width, height, diagonal, opts.margin, wpl, opts);
             return best_angle;
         }
 
@@ -147,7 +147,7 @@ namespace derot{ //detect rotation
             o.angle_first = cur_from;
             o.angle_last  = cur_to;
 
-            tasks.emplace_back( std::async(std::launch::async, find_best, pixData, width, height, diagonal, wpl, o) );
+            tasks.emplace_back( std::async(std::launch::async, find_best, pixData, width, height, diagonal, opts.margin, wpl, o) );
         }
 
         int    best_angle = 0;
